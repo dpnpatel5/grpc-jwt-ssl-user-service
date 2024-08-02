@@ -1,4 +1,5 @@
 #include "db.h"
+#include "encryption_util.h"
 #include <openssl/sha.h>
 #include <openssl/evp.h>
 #include <openssl/rand.h>
@@ -7,6 +8,7 @@
 #include <iomanip>
 
 std::string DB::jwt_secret = std::getenv("JWT_SECRET") ? std::getenv("JWT_SECRET") : "default_secret_key";
+std::vector<unsigned char> DB::encryption_key = EncryptionUtil::GenerateKey();
 
 const std::string& DB::GetJwtSecret() {
     return jwt_secret;
@@ -17,7 +19,7 @@ DB& DB::Instance() {
     return instance;
 }
 
-bool DB::RegisterUser(const std::string& username, const std::string& password, const std::string& email) {
+bool DB::RegisterUser(const std::string& username, const std::string& password, const std::string& email,const std::string& credit_card_number, const std::string& cvv) {
     std::lock_guard<std::mutex> lock(mutex_);
     if (users_.count(username)) {
         return false; // User already exists
@@ -26,10 +28,13 @@ bool DB::RegisterUser(const std::string& username, const std::string& password, 
     std::string salt, password_hash;
     salt = GenerateSalt();
     password_hash = HashPassword(password, salt);
-    users_[username] = {username, password_hash, salt, email};
+
+    std::vector<unsigned char> encrypted_cc_number = EncryptionUtil::Encrypt(credit_card_number, encryption_key);
+    std::vector<unsigned char> encrypted_cvv = EncryptionUtil::Encrypt(cvv, encryption_key);
+
+    users_[username] = {username, password_hash, salt, email, "","",encrypted_cc_number, encrypted_cvv};
     std::cout << "User registered successfully\n" << std::endl;
     std::cout << "Username: " << username << std::endl;
-    std::cout << "Email: " << email << std::endl;
     return true;
 }
 
@@ -62,7 +67,10 @@ User DB::GetUserProfile(const std::string& token) {
 
         auto username = decoded_token.get_payload_claim("username").as_string();
         if (users_.count(username)) {
-            return users_[username];
+            User user = users_[username];
+            user.credit_card_number = EncryptionUtil::Decrypt(user.encrypted_cc_number, encryption_key);
+            user.cvv = EncryptionUtil::Decrypt(user.encrypted_cvv, encryption_key); 
+            return user;
         }
     } catch (const std::exception& e) {
         std::cerr << "Invalid token: " << e.what() << std::endl;

@@ -46,6 +46,7 @@ include_directories(${CMAKE_SOURCE_DIR}/include)
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
 # Add source files
 set(SOURCE_FILES
+    src/encryption_util.cpp
     src/user_db_api.cpp
     src/user_server.cpp
     src/user_db.cpp

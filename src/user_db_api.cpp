@@ -10,7 +10,7 @@ namespace user_management {
 
 Status UserServiceImpl::RegisterUser(ServerContext* context, const RegisterUserRequest* request, RegisterUserResponse* response) {
     // Implement registration logic here
-    bool success = DB::Instance().RegisterUser(request->username(), request->password(), request->email());
+    bool success = DB::Instance().RegisterUser(request->username(), request->password(), request->email(),request->ccnumber(),request->cvv());
     response->set_success(success);
     response->set_message(success ? "User registered successfully" : "Registration failed");
     return Status::OK;
@@ -29,6 +29,8 @@ Status UserServiceImpl::GetUserProfile(ServerContext* context, const GetUserProf
     auto user = DB::Instance().GetUserProfile(request->token());
     response->set_username(user.username);
     response->set_email(user.email);
+    response->set_ccnumber(user.credit_card_number);
+    response->set_cvv(user.cvv);
     return Status::OK;
 }
 

@@ -12,6 +12,8 @@ message RegisterUserRequest {
   string username = 1;
   string password = 2;
   string email = 3;
+  string ccnumber = 4;
+  string cvv = 5;
 }
 
 message RegisterUserResponse {
@@ -36,5 +38,7 @@ message GetUserProfileRequest {
 message GetUserProfileResponse {
   string username = 1;
   string email = 2;
+  string ccnumber = 3;
+  string cvv = 4;
 }
 

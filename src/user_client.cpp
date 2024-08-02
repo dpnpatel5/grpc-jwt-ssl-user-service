@@ -18,11 +18,13 @@ public:
     UserManagementClient(std::shared_ptr<Channel> channel)
         : stub_(UserService::NewStub(channel)) {}
 
-    bool RegisterUser(const std::string& username, const std::string& password, const std::string& email) {
+    bool RegisterUser(const std::string& username, const std::string& password, const std::string& email,const std::string& ccnumber,const std::string& cvv) {
         RegisterUserRequest request;
         request.set_username(username);
         request.set_password(password);
         request.set_email(email);
+        request.set_ccnumber(ccnumber);
+        request.set_cvv(cvv);
 
         RegisterUserResponse response;
         ClientContext context;
@@ -66,8 +68,11 @@ public:
         Status status = stub_->GetUserProfile(&context, request, &response);
 
         if (status.ok()) {
-            std::cout << "GetUserProfile success: username=" << response.username()
-                      << ", email=" << response.email() << std::endl;
+            std::cout << "GetUserProfile success:"<<std::endl; 
+            std::cout << "Username=" << response.username()<< std::endl;
+            std::cout << "Email=" << response.email() << std::endl;
+            std::cout << "Credit Card Number=" << response.ccnumber()<< std::endl;
+            std::cout << "CVV=" << response.cvv()<< std::endl;
         } else {
             std::cerr << "GetUserProfile failed: " << status.error_message() << std::endl;
         }
@@ -88,6 +93,8 @@ int main(int argc, char** argv) {
         std::string username;
         std::string password;
         std::string email;
+        std::string ccnumber;
+        std::string cvv;
 
         std::cout << "Enter username: ";
         std::cin >> username;
@@ -95,9 +102,13 @@ int main(int argc, char** argv) {
         std::cin >> password;
         std::cout << "Enter email: ";
         std::cin >> email;
+        std::cout << "Enter Credit Card Nu,ber: ";
+        std::cin >> ccnumber;
+        std::cout << "Enter cvv: ";
+        std::cin >> cvv;
 
         // Register a user
-        bool registered = client.RegisterUser(username, password, email);
+        bool registered = client.RegisterUser(username, password, email,ccnumber,cvv);
 
         if (registered) {
             std::cout << "User registered successfully.\n";
