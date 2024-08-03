@@ -1,6 +1,9 @@
 #include "user_management.grpc.pb.h"
 #include <grpcpp/grpcpp.h>
 #include <iostream>
+#include <fstream>
+#include <sstream>
+#include <memory>
 
 using grpc::Channel;
 using grpc::ClientContext;
@@ -12,6 +15,23 @@ using user_management::LoginUserRequest;
 using user_management::LoginUserResponse;
 using user_management::GetUserProfileRequest;
 using user_management::GetUserProfileResponse;
+
+void read ( const std::string& filename, std::string& data ){
+    std::ifstream file ( filename.c_str (), std::ios::in );
+
+    if ( file.is_open () )
+    {
+        std::stringstream ss;
+        ss << file.rdbuf ();
+
+        file.close ();
+
+        data = ss.str ();
+    }
+
+    return;
+}
+
 
 class UserManagementClient {
 public:
@@ -83,7 +103,17 @@ private:
 };
 
 int main(int argc, char** argv) {
-    UserManagementClient client(grpc::CreateChannel("localhost:50051", grpc::InsecureChannelCredentials()));
+    
+    std::string target_str = "localhost:50051";
+
+    std::string cacert;
+    read("../cert/sslcred.crt",cacert);
+    
+    grpc::SslCredentialsOptions ssl_opts;
+    ssl_opts.pem_root_certs=cacert;
+
+    auto ssl_creds = grpc::SslCredentials(ssl_opts);
+    UserManagementClient client(grpc::CreateChannel(target_str, ssl_creds));
 
     std::string action;
     std::cout << "Enter action (register/login): ";
